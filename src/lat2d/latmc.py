@@ -7,21 +7,26 @@ class ion:
         self.i=i        #assign an index to the ion
         self.pos=pos    #pos (y,x) of the ion in the space (which will be later mapped on the lattice)
         self.init=pos   #init position of ion in space 
+        self.step=0     #to calculate the rejection ratio
 
 
 
 class lat_2d:
 
-    def __init__(self,N:int,coverage:float,epsilon:float):
+    def __init__(self, N:int, coverage:float, epsilon:float, equilibriation:int):
         
-        if coverage>1:
-            print("Coverage Cannot be greater than 1")
-            raise ValueError
+        if coverage>=1 or coverage<=0:
+            print(f"Coverage of {coverage} bot allowed!!")
+            raise ValueError(f"Coverage of {coverage} bot allowed!!")
 
         self.N=N
         self.epsilon=epsilon
         self.cov=coverage
         self.ions=list()        
+        self.rejection = 0
+        self.total = 0
+        self.equilibriation = equilibriation
+        self.enreject = 0                       # check for the energy metropolis rejection
 
     def get_lattice_2d(self):
         """
@@ -39,7 +44,7 @@ class lat_2d:
 
         return (lattice, ionc)
 
-    def get_energy_2d(self,sites):
+    def get_energy_2d(self,sites:int):
         """
         creates and return the energy penalty lattice
         Keyword Arguments: 
@@ -57,15 +62,17 @@ class lat_2d:
     def init_lattice(self):
         """ initialises the energy lattice """
         self.lattice,self.ionpos=self.get_lattice_2d()
-
         for i,posn in enumerate(self.ionpos):
             self.ions.append(ion(i,posn))
-    
+        print(f"{self.N}X{self.N} lattice with coverage {self.cov} initialised ({self.cov*self.N*self.N} ions")
 
     def init_energylattice(self):
         """ initialises the energy penalty lattice """
-        self.enlattice=self.get_energy_2d(2*(100-self.cov)*(self.N**2)/100) # Note the 2 factor is for yttria stabilised zirconia 
-  
+        sites=2*(1-self.cov)*(self.N**2)
+        self.enlattice=self.get_energy_2d(int(sites)) # Note the 2 factor is for yttria stabilised zirconia 
+        print(f"{self.N}X{self.N} energy lattice with coverage {self.cov} initialised ({sites}) penalties)")
+        print(self.enlattice)
+        print("_________")
 
     def mappostolat(self,s,i:int):
         """
@@ -90,17 +97,22 @@ class lat_2d:
         s=np.array(MOVES[np.random.choice([0,1,2,3])])                                      # s is an array but class.pos is a tuple,
                                                                                             # so we add them by converting pos into ndarray
                                                                                             # and then revert it back to tuple
-
-        
         latposn=self.mappostolat(s,i)
         delU=self.enlattice[latposn]-self.enlattice[self.mappostolat(None,i)]
         rnd=np.random.uniform(0,1)
         prob=np.exp(-delU)
+        self.total+=1
+        self.ions[i].step+=1
 
-        if self.lattice[latposn]!=1 and prob>rnd:                                            #if there is no ion in the step chosen
+        if self.lattice[latposn]!=1 and prob>=rnd:                                            #if there is no ion in the step chosen
             self.lattice[self.mappostolat(None,i)]=0                                         #vacate teh current position in the lattice   
             self.ions[i].pos=tuple(np.array(self.ions[i].pos)+s)                             #update the ion position
             self.lattice[latposn]=1                                                          #update the new filled position
+        elif prob<rnd:
+            self.rejection += 1
+            self.enreject +=1
+        elif self.ions[i].step>self.equilibriation:
+            self.rejection += 1
         return None
 
     def onemcstep(self):

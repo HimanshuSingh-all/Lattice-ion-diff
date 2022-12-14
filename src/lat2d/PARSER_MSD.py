@@ -46,8 +46,9 @@ def time_msd(traj,fname,paramlen,EQUILIBIRIATION=5000):
     NS=int(params['NSTEPS'])
     WP=int(params['WRITE-PERIODICITY'])
     
-    tau=(NS-EQUILIBIRIATION)//(4*WP)
+    tau=(NS-EQUILIBIRIATION)//(2*WP)
     print(tau)
+    print(f"Opened this {fname} file:")
     for n in range(1,tau+1):
         disp_sq_comp=(traj[n*s::]-traj[:-n*s:])*(traj[n*s::]-traj[:-n*s:]) #traj[:-n:,1:] means that we slice till (lastelement-n)th element  
         disp=np.sum(disp_sq_comp,axis=1)                                 # add the component x and y   
