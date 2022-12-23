@@ -1,5 +1,3 @@
-#TODO: make is such that it picks up the quilibriation form thew file itseld       
-#TODO:make it so that the 
 #Parser MSD
 import collections
 from scipy import stats
@@ -68,6 +66,11 @@ def time_msd(fname,dire,EQUILIBIRIATION=5000,**test):
     # [[ t, MSD(t) ]]
     """
     if 'test' in test or test['test']:
+        traj = np.loadtxt(f'{dire}/{fname}')
+        x = traj[::2]
+        y = traj[1::2]
+        tau = x.shape[0]//2 
+    else:
         params,_=getrunparams(dire)                               # get the run parameters
         s=int(params['NUM-IONS'])
         NS=int(params['NSTEPS'])
@@ -78,12 +81,7 @@ def time_msd(fname,dire,EQUILIBIRIATION=5000,**test):
         y = traj[1::2]
         print(tau)
         print(f"Opened this {fname} file:")
-    else:
-        traj = np.loadtxt(fname)
-        x = traj[::2]
-        y = traj[1::2]
-        tau = x.shape[0]//2 
-
+    print(x ,"y:\n",y)
     mea=list()
     if x.shape != y.shape:
         raise ValueError(" x and y don't have same dimensions ")
@@ -96,5 +94,5 @@ def time_msd(fname,dire,EQUILIBIRIATION=5000,**test):
         mea.append( [n, ensembleSinglePartMean] )
          
     print("_______________________")
-    print(params['Coverage'],fname)
+    #print(params['Coverage'],fname)
     return mea
