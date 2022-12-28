@@ -4,7 +4,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import glob
 import numpy as np
-
+skiprows = 1
 def getrunparams(dire:str)->(dict,int):
     """ Searches for one parameters.txt file on default in the specified folder then returns the run parameters (dictionary) and the length 
     ** Keyword Arguments:
@@ -34,7 +34,7 @@ def getnparray(dire:str, fname:str):
     # fname : name of the simulation run file.
     _______________________________________________________________________________________________________________________________________
     """
-    ndarray=np.loadtxt(fname)
+    ndarray=np.loadtxt(f"{dire}/{fname}",skiprows=skiprows)
     return ndarray
 
 
@@ -54,7 +54,7 @@ def ensemble_sqavg(ndarray,fname,paramlen):
     return msdpers
 
 
-def time_msd(fname,dire,EQUILIBIRIATION=5000,**test):
+def time_msd(fname,dire,**test):
     #traj: a numpy iXD
     """ gives the mean square displacement (time origin)
     ** Keyword Arguments:
@@ -65,23 +65,19 @@ def time_msd(fname,dire,EQUILIBIRIATION=5000,**test):
     ** Returns:
     # [[ t, MSD(t) ]]
     """
-    if 'test' in test or test['test']:
-        traj = np.loadtxt(f'{dire}/{fname}')
-        x = traj[::2]
-        y = traj[1::2]
-        tau = x.shape[0]//2 
-    else:
-        params,_=getrunparams(dire)                               # get the run parameters
-        s=int(params['NUM-IONS'])
-        NS=int(params['NSTEPS'])
-        WP=int(params['WRITE-PERIODICITY']) 
-        tau=(NS-EQUILIBIRIATION)//(2*WP)
-        traj = getnparray(fname , dire)
-        x = traj[::2]
-        y = traj[1::2]
-        print(tau)
-        print(f"Opened this {fname} file:")
+    params,_=getrunparams(dire)                               # get the run parameters
+    #s=int(params['NUM-IONS'])
+    EQUILIBIRIATION=int(params['EQL'])
+    NS=int(params['NSTEPS'])
+    WP=int(params['WRITE-PERIODICITY']) 
+    tau=(NS-EQUILIBIRIATION)//(2*WP)
+    traj = getnparray(dire,fname )
+    x = traj[::2]
+    y = traj[1::2]
+    print(tau)
+    print(f"Opened this {fname} file:")
     print(x ,"y:\n",y)
+    print(x.shape ,"y:\n",y.shape)
     mea=list()
     if x.shape != y.shape:
         raise ValueError(" x and y don't have same dimensions ")
@@ -91,8 +87,8 @@ def time_msd(fname,dire,EQUILIBIRIATION=5000,**test):
         ydiff = y[n:]-y[:-n]
         singlePartMean = (xdiff**2 + ydiff**2).sum(axis=0)/(x.shape[0]-n)
         ensembleSinglePartMean = singlePartMean.mean() 
-        mea.append( [n, ensembleSinglePartMean] )
+        mea.append( [n*WP, ensembleSinglePartMean] )
          
     print("_______________________")
-    #print(params['Coverage'],fname)
-    return mea
+    ret= np.array(mea)
+    return ret
