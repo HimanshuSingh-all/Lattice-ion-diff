@@ -1,12 +1,11 @@
 from lat2d import latmc
 write=0
-epsilon = 2*2223/1300
 equilibriation = 10000
 N=20
 NSTEPS=50000
 WT=100
 
-def run_simulations(coverages:list)->None:
+def run_simulations(coverages:list,epsilon:float)->None:
     """ Runs the simulations with the given parameters 
     --Keyword Arguments:
     # coverage(list) : list of coverages 
@@ -34,22 +33,25 @@ def run_simulations(coverages:list)->None:
                     fhand.write("\n")
 
             with open('newrr.txt','a+') as fhand:  
-                fhand.write(f"Coverage:  {cov} : [ Rejection : {mylat.rejection} Total : {mylat.total} Rejection-Ratio : {mylat.rejection/mylat.total} EnRejection : {mylat.enreject} Enrejection-Ratio : {mylat.enreject/mylat.total} ]"+"\n")            
+                fhand.write(f"Coverage  {cov}  Rejection {mylat.rejection} Total {mylat.total} Rejection-Ratio {mylat.rejection/mylat.total} EnRejection {mylat.enreject} Enrejection-Ratio : {mylat.enreject/mylat.total} "+"\n")            
 
 if __name__ == "__main__":
     coverage = [99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
+    epsilon = [i for i in range(1,10)]
     import os
     import glob
-    nruns = len(glob.glob("Data-*"))
-    os.mkdir(f"Data-{nruns}")
-    os.chdir(f"Data-{nruns}")
-    run_simulations(coverage)
-    with open('parameters.txt','w+') as f:
-        f.write(f"epsilon:{epsilon} \n")
-        f.write(f"WRITE-PERIODICITY:{WT} \n")
-        f.write(f"NSTEPS:{NSTEPS} \n")
-        f.write(f"EQL:{equilibriation} \n")
-        f.write(f"N:{N}")
+    for eps in epsilon:
+        nruns = len(glob.glob("Data-*"))
+        os.mkdir(f"Data-{nruns}")
+        os.chdir(f"Data-{nruns}")
+        run_simulations(coverage,eps)
+        with open('parameters.txt','w+') as f:
+            f.write(f"epsilon:{eps} \n")
+            f.write(f"WRITE-PERIODICITY:{WT} \n")
+            f.write(f"NSTEPS:{NSTEPS} \n")
+            f.write(f"EQL:{equilibriation} \n")
+            f.write(f"N:{N}")
+        os.chdir("..")
 
 
 """
