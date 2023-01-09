@@ -1,0 +1,1 @@
+Rejection 4986658 Total 10000000 Rejection-Ratio 0.4986658 EnRejection 0 Enrejection-Ratio : 0.0 

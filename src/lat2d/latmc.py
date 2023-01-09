@@ -66,9 +66,11 @@ class lat_2d:
             self.ions.append(ion(i,posn))
         print(f"{self.N}X{self.N} lattice with coverage {self.cov} initialised ({self.cov*self.N*self.N} ions")
 
-    def init_energylattice(self):
-        """ initialises the energy penalty lattice """
-        sites=2*(1-self.cov)*(self.N**2)
+    def init_energylattice(self,fac=2):
+        """ initialises the energy penalty lattice 
+            fac: factor multiplicable of how many energy penalty packets to apply compared to the site penalties.
+        """
+        sites=fac*(1-self.cov)*(self.N**2)
         self.enlattice=self.get_energy_2d(int(sites)) # Note the 2 factor is for yttria stabilised zirconia 
         print(f"{self.N}X{self.N} energy lattice with coverage {self.cov} initialised ({sites}) penalties)")
         print(self.enlattice)
