@@ -1,0 +1,1 @@
+Coverage  90  Rejection 13656649 Total 18000000 Rejection-Ratio 0.7587027222222222 EnRejection 1426742 Enrejection-Ratio : 0.07926344444444444 

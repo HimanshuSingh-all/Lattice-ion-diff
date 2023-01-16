@@ -12,8 +12,8 @@ def returnparams(data:int,dset:int)->dict:
             line=lin.split(':')
             params[line[0]] = line[1]
     return params
-dset = 2# [1,2]#int( input("Number of the simulation set: "))
-star = 17
+dset = 4# [1,2]#int( input("Number of the simulation set: "))
+star = 12
 data = int( input("Number of the simulation directory: "))
 
 
@@ -22,34 +22,44 @@ data = int( input("Number of the simulation directory: "))
 
 dire = f"Set-{dset}/Data-{data}"
 files = glob.glob(f"{dire}/*.txt")
-D =[]
+msd_traj =[] 
 for fname in files:
     if fname ==f'{dire}/parameters.txt' or fname ==f'{dire}/newrr.txt':
         continue
     fi = fname.split("/")[-1]
     cov = int(fi.split("-")[0])
     print(fi, cov)
-    D.append([ cov, newparser.time_msd( fi, dire)] )     
+    msd_traj.append([ cov, newparser.time_msd( fi, dire)] )     
 
-D.sort(key=lambda x: x[0] )
-"""
-print(D[1])
-    vac = []
-    plt.xlabel(r'$Vacancy(\%)\to$')
-    plt.ylabel('$Diffusivity\to$')
-    for elem in D[::-1]:
-        vac.append([ 100-elem[0],stats.linregress(elem[1][:,0], elem[1][:,1]).slope/4])
+msd_traj.sort(key=lambda x: x[0] )
 
-    vac = np.array(vac)
-    plt.plot(vac[:num,0], vac[:num,1],alpha = 0.7, marker=dat-15, label= r"$E_{min}/k_BT=$"+"{0}".format(returnparams(dat,2)['epsilon']) )
 
+
+from matplotlib.lines import Line2D
+print(Line2D.markers)
+mark = []
+for marker in Line2D.markers:
+    mark.append(marker)
+
+# Plot Difusivity vs Vacancy
+vac = []
+plt.xlabel(r'$Vacancy(\%)\to$')
+plt.ylabel(r'$Diffusivity\to$')
+
+for elem in msd_traj[::-1]:
+    vac.append([ 100-elem[0],stats.linregress(elem[1][:,0], elem[1][:,1]).slope/4])
+
+vac = np.array(vac)
+plt.plot(vac[:num,0], vac[:num,1],alpha = 0.7, color='red', marker='o' ,label= r"$E_{min}/k_BT=$"+"{0}".format(returnparams(data,dset)['epsilon']) )
 plt.legend()
 diff = input('Enter diff:')
 plt.savefig(f'diff{diff}.png', dpi= 300, bbox_inches='tight')
 plt.show()
-"""
-for elem in D[-10:]:
-    plt.plot(elem[1][:,0], elem[1][:,1], label=f'Vacancy:{100-elem[0]}%')
+
+
+# Plot MSD VS TIMESTEPS
+for i,elem in enumerate(msd_traj[-10::2]):
+    plt.plot(elem[1][:,0], elem[1][:,1], label=f'Vacancy:{100-elem[0]}%', marker= mark[i])
 plt.legend()
 plt.show()
 

@@ -17,16 +17,18 @@ class lat_2d:
         
         if coverage>=1 or coverage<=0:
             print(f"Coverage of {coverage} bot allowed!!")
-            raise ValueError(f"Coverage of {coverage} bot allowed!!")
+            raise ValueError(f"Coverage of {coverage} not allowed!!")
 
         self.N=N
-        self.epsilon=epsilon
+        self.epsilon=epsilon                    # Value of the Energy Penalty
         self.cov=coverage
         self.ions=list()        
-        self.rejection = 0
-        self.total = 0
-        self.equilibriation = equilibriation
+        self.rejection = 0                      # number of moves rejected
+        self.total = 0                          # total moves proposed
+        self.equilibriation = equilibriation    # Equiibriation Steps 
         self.enreject = 0                       # check for the energy metropolis rejection
+        self.init_lattice()
+        self.init_energylattice()
 
     def get_lattice_2d(self):
         """
@@ -57,6 +59,7 @@ class lat_2d:
         lattice=np.zeros((self.N,self.N))
         for b in choice:
             lattice[ tuple(A[b]) ]+=self.epsilon 
+            
         return lattice
 
     def init_lattice(self):
@@ -68,11 +71,9 @@ class lat_2d:
 
     def init_energylattice(self,fac=2):
         """ initialises the energy penalty lattice 
-            fac: factor multiplicable of how many energy penalty packets to apply compared to the site penalties.
         """
-        sites=fac*(1-self.cov)*(self.N**2)
-        self.enlattice=self.get_energy_2d(int(sites)) # Note the 2 factor is for yttria stabilised zirconia 
-        print(f"{self.N}X{self.N} energy lattice with coverage {self.cov} initialised ({sites}) penalties)")
+        self.enlattice=self.epsilon * ( np.ones( (self.N,self.N) ) - self.lattice )
+        print(f"{self.N}X{self.N} energy lattice with coverage {self.cov} initialised penalties)")
         print(self.enlattice)
         print("_________")
 
@@ -92,13 +93,17 @@ class lat_2d:
 
     def oneionstep(self,i):
         """ Move a given ion using the metropolis algorithm
+
         Keyword Arguments:
         i-- the index of the ion
+
+        Additional:
+        # s is an array but class.pos is a tuple,
+        # so we add them by converting pos into ndarray
+        # and then revert it back to tuple
         """
         MOVES=[(1,0),(0,1),(-1,0),(0,-1)]
-        s=np.array(MOVES[np.random.choice([0,1,2,3])])                                      # s is an array but class.pos is a tuple,
-                                                                                            # so we add them by converting pos into ndarray
-                                                                                            # and then revert it back to tuple
+        s=np.array(MOVES[np.random.choice([0,1,2,3])])                                      
         latposn=self.mappostolat(s,i)
         delU=self.enlattice[latposn]-self.enlattice[self.mappostolat(None,i)]
         rnd=np.random.uniform(0,1)
@@ -123,13 +128,18 @@ class lat_2d:
         else:
             self.init_lattice()
             self.onemcstep()
-      
-    def sqdisp(self):
-        disp=np.zeros_like(self.ions)
-        for i,io in enumerate(self.ions):
-            disp[i]=np.linalg.norm((np.array(io.pos)-np.array(io.init)))**2
-            #print("posn: ",(np.array(io.pos)-np.array(io.init)),":",np.linalg.norm((np.array(io.pos)-np.array(io.init))))
-        return 
+    
+    def energy(self, *args, **kwargs):
+        """ Returns the Energy of the lattice """ 
+        return np.sum( np.multiply( self.lattice , self.enlattice ) )
+
+    def average_energy(self):
+        """ Returns the average energy of the Lattice """
+        return self.energy()/len(self.ions)
+
+
+        
+        
 
 
 if __name__=='__main__':

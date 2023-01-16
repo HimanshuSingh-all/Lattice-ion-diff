@@ -15,8 +15,6 @@ def run_simulations(coverages:list,epsilon:float)->None:
         with open(fname,'w+') as fhand: 
 
             mylat=latmc.lat_2d(N,cov/100,epsilon,equilibriation)
-            mylat.init_lattice()
-            mylat.init_energylattice()
             NIONS=len(mylat.ions)
             fhand.write(f"Coverage:{cov}\n")           
             for i,step in enumerate(range(NSTEPS)):
@@ -36,8 +34,8 @@ def run_simulations(coverages:list,epsilon:float)->None:
                 fhand.write(f"Coverage  {cov}  Rejection {mylat.rejection} Total {mylat.total} Rejection-Ratio {mylat.rejection/mylat.total} EnRejection {mylat.enreject} Enrejection-Ratio : {mylat.enreject/mylat.total} "+"\n")            
 
 if __name__ == "__main__":
-    coverage = [99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
-    epsilon = [0]
+    coverage = [90]#[100-4*i for i in range(1,13)]#[99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
+    epsilon = [i for i in range(0,10)]
     import os
     import glob
     for eps in epsilon:
