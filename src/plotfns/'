@@ -1,0 +1,30 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_energy_vs_steps( trajectory, **kwargs ):
+    """
+    trajectory ( nX2 ndarray): MCStep vs Energy of lattice
+    **kwargs: for plot parameters
+    """
+    plt.title("Energy vs MCSteps")
+    plt.xlabel(r"MC Step $\to$")
+    plt.ylabel(r"Energy $\to$")
+    plt.plot(trajectory[:,0], trajectory[:,1], kwargs)
+    
+def plot_rejection_vs_steps( trajectory, **kwargs):
+    """
+    trajectory ( nX2 ndarray): MCStep vs Energy of lattice
+    **kwargs: for plot parameters
+    """
+    plt.plot(trajectory[:,0], trajectory[:,1], kwargs)
+
+
+if __name__ ="__main__":
+    
+    cov = 96
+    steps = 50000
+    filepath=f"../Data-0/{cov}-NSTEPS{steps}-energy.txt"
+    
+    with open(filepath,"r") as fhand:
+

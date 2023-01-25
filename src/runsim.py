@@ -2,7 +2,7 @@ from lat2d import latmc
 write=0
 equilibriation = 10000
 N=20
-NSTEPS=50000
+NSTEPS=100000
 WT=100
 
 def run_simulations(coverages:list,epsilon:float)->None:
@@ -12,13 +12,20 @@ def run_simulations(coverages:list,epsilon:float)->None:
     """
     for cov in coverages:
         fname=f"{cov}-NSTEPS{NSTEPS}.txt"
-        with open(fname,'w+') as fhand: 
+        ename=f"{cov}-NSTEPS{NSTEPS}-energy.txt"
+        with open(fname,'w+') as fhand, open(ename,'w+') as ehand:
 
             mylat=latmc.lat_2d(N,cov/100,epsilon,equilibriation)
             NIONS=len(mylat.ions)
             fhand.write(f"Coverage:{cov}\n")           
-            for i,step in enumerate(range(NSTEPS)):
+            for i in range(NSTEPS):
                 mylat.onemcstep()
+
+                if i%WT == 0:
+                    ehand.write(f"{i} ")
+                    ehand.write(f"{mylat.average_energy()} ")
+                    ehand.write(f"{mylat.rejection/mylat.total} \n")
+
                 if i%WT==0 and i>equilibriation:
                     for io in mylat.ions:
                         fhand.write(f"{io.pos[0]} ")
@@ -34,10 +41,11 @@ def run_simulations(coverages:list,epsilon:float)->None:
                 fhand.write(f"Coverage  {cov}  Rejection {mylat.rejection} Total {mylat.total} Rejection-Ratio {mylat.rejection/mylat.total} EnRejection {mylat.enreject} Enrejection-Ratio : {mylat.enreject/mylat.total} "+"\n")            
 
 if __name__ == "__main__":
-    coverage = [90]#[100-4*i for i in range(1,13)]#[99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
-    epsilon = [i for i in range(0,10)]
+    coverage =[100-4*i for i in range(1,4)]#[99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
+    epsilon = [i for i in range(4,8)]
     import os
     import glob
+    
     for eps in epsilon:
         nruns = len(glob.glob("Data-*"))
         os.mkdir(f"Data-{nruns}")

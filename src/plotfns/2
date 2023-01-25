@@ -1,0 +1,70 @@
+import glob
+import plotMCsteps as MC
+import matplotlib.pyplot as plt
+import os
+from matplotlib.lines import Line2D
+
+
+def parse_set(set_name:str, ftypes):
+    parentdir = os.pwd()
+    def wrapfunct(func, ftypes, **kwargs):
+        files = glob.glob(f'{set_name}/Data-*/*{ftype}.txt')
+        fpaths = glob.glob(f'{set_name}/Data-*/')
+        for fil in files:
+            pass
+            func(**kwargs, fil = 
+        pass
+
+    return wrapfunct
+
+
+def plot_one(plotwhat, fil:str, trajs:tuple, path:str,cov,  **kwargs):
+    """
+    Keyword Arguments:
+
+    """
+    data = np.loadtxt(fil)
+    if kwargs is None or 'marker' not in kwargs:
+        marker = None                               
+    else:
+        marker = kwargs['marker']
+
+    l = len(glob.glob('*.png')) 
+    plotwhat(trajectory = np.hstack([data[traj[0]], data[traj[1]]]), marker = marker,label=cov)
+
+
+def plot_onebyone(plotwhat, path:str, traj:tuple, typ ='energy'):    
+
+    files = glob.glob(f'{path}/*{typ}.txt')
+    for fil,marker in zip(files, Line2D.markers):
+        cov = fil.split('/')[-1].split('-')[0] 
+        plot_one(plotwhat, fil, traj, path, int(cov), marker = marker)
+        plt.savefig(f'{path}/{l}.png;')
+        plt.show()
+        
+def plot_all(plotwhat, path:str, traj:tuple, typ ='energy'):    
+
+    files = glob.glob(f'{path}/*{typ}.txt')
+    for fil,marker in zip(files, Line2D.markers):
+        cov = fil.split('/')[-1].split('-')[0] 
+        plot_one(plotwhat, fil, traj, path, int(cov), marker = marker)
+    plt.savefig(f'{path}/{l}-all.png;')
+    plt.show()
+
+
+if __name__ =='__main__':
+    
+    se = 6
+    fpaths= glob.glob(f"Set-{se}/Data-*")
+    print(fpaths)
+    for pat in fpaths:
+        plot_onebyone(MC.plot_energy_vs_steps, pat, (1,2))
+
+    for pat in fpaths:
+        plot_onebyone(MC.plot_rejection__vs_steps, pat, (1,3))
+
+    for pat in fpaths:
+        plot_all(MC.plot_energy_vs_steps, pat, (1,2))
+
+    for pat in fpaths:
+        plot_all(MC.plot_rejection_vs_steps, pat, (1,3))

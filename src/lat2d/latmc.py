@@ -70,7 +70,8 @@ class lat_2d:
         print(f"{self.N}X{self.N} lattice with coverage {self.cov} initialised ({self.cov*self.N*self.N} ions")
 
     def init_energylattice(self,fac=2):
-        """ initialises the energy penalty lattice 
+        """ 
+        initialises the energy penalty lattice 
         """
         self.enlattice=self.epsilon * ( np.ones( (self.N,self.N) ) - self.lattice )
         print(f"{self.N}X{self.N} energy lattice with coverage {self.cov} initialised penalties)")
@@ -118,7 +119,7 @@ class lat_2d:
         elif prob<rnd:
             self.rejection += 1
             self.enreject +=1
-        elif self.ions[i].step>self.equilibriation:
+        else:
             self.rejection += 1
         return None
 
@@ -135,7 +136,8 @@ class lat_2d:
 
     def average_energy(self):
         """ Returns the average energy of the Lattice """
-        return self.energy()/len(self.ions)
+        a = self.energy()
+        return a/len(self.ions)
 
 
         
