@@ -1,4 +1,5 @@
 from lat2d import latmc
+import numpy as np
 write=0
 equilibriation = 10000
 N=20
@@ -39,10 +40,17 @@ def run_simulations(coverages:list,epsilon:float)->None:
 
             with open('newrr.txt','a+') as fhand:  
                 fhand.write(f"Coverage  {cov}  Rejection {mylat.rejection} Total {mylat.total} Rejection-Ratio {mylat.rejection/mylat.total} EnRejection {mylat.enreject} Enrejection-Ratio : {mylat.enreject/mylat.total} "+"\n")            
+            
+        with open(f'FinalState-{cov}.txt','w+') as fhand:  
+            np.savetxt(fhand,mylat.lattice)
+
+        with open(f'FinalENState-{cov}.txt','a+') as fhand:  
+            np.savetxt(fhand,mylat.enlattice)
+    
 
 if __name__ == "__main__":
-    coverage =[100-4*i for i in range(1,4)]#[99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
-    epsilon = [i for i in range(4,8)]
+    coverage =[100-4*i for i in range(1,7)]#[99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
+    epsilon =[3,4]# [i for i in range(1,4)]
     import os
     import glob
     

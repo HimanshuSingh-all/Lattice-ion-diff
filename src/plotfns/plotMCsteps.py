@@ -16,8 +16,8 @@ def plot_energy_vs_steps( trajectory, **kwargs ):
 
     plt.title("Energy vs MCSteps")
     plt.xlabel(r"MC Step $\to$")
-    plt.ylabel(r"Energy $\to$")
-    plt.plot(trajectory[:,0], trajectory[:,1], marker = marker, label = f"Coverage: {cov}", alpha = 0.5, markersize=5,markevery=10)
+    plt.ylabel(r"Energy$(k_bT)$ $\to$")
+    plt.plot(trajectory[:,0], trajectory[:,1], marker = marker, label = f"Coverage: {cov}", alpha = 0.5, markersize=5,markevery=5)
     
 def plot_rejection_vs_steps( trajectory, **kwargs):
     """
@@ -34,7 +34,7 @@ def plot_rejection_vs_steps( trajectory, **kwargs):
     plt.title("Rejection-Ratio vs MCSteps")
     plt.xlabel(r"MC Step $\to$")
     plt.ylabel(r"Rejection-Ratio $\to$")
-    plt.plot(trajectory[:,0], trajectory[:,1], marker = marker, label = f"Coverage: {cov}", alpha = 0.5, markersize =6, markevery=10)
+    plt.plot(trajectory[:,0], trajectory[:,1], marker = marker, label = f"Coverage: {cov}", alpha = 0.5, markersize =6, markevery=5)
 
 
 if __name__=="__main__":
