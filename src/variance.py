@@ -12,7 +12,6 @@ def givepaths(elem):
         return _
     path = f"Datasets/Set-{elem}"
     for dat in glob.glob(f"{path}/*"):
-        print(dat)
         if dat.split('.')[-1] == 'png':
             continue
         yield (dat,glob.glob(f"{dat}/*-energy.txt"))
@@ -29,7 +28,6 @@ def var_calcs(dir_file:tuple):
     ret_data = np.zeros((len(paths),2))
     for i,fname in enumerate(paths):
         cov = int(fname.split('/')[-1].split('-')[0])
-        print(cov)
         edata = np.loadtxt(fname)
         ret_data[i,0],ret_data[i,1] = cov, calc_variance(edata[:,1])
    
@@ -40,17 +38,17 @@ def var_calcs(dir_file:tuple):
 
 if __name__ == "__main__":
 
-    files = 6
+    files = 7
     a=givepaths(files)
     path = f"Datasets/Set-{files}"
-    datas = dict()
+    datas = list()
     for dir_file in a:
         dire = dir_file[0]
-        print("::",dire)
         with open(f"{dire}/parameters.txt",'r') as fhand:
             eps = fhand.read().split(':')[1].split('\n')[0]
             
-            plotit = datas[eps] = var_calcs(dir_file)
+            plotit =  var_calcs(dir_file)
+            datas.append([int(eps), plotit])
             plt.plot(plotit[:,0], plotit[:,1], alpha = 0.5, marker= 'x')
             plt.xlabel(r'Coverage$\to$')
             plt.ylabel(r'$\sigma_E^2$')
@@ -60,17 +58,18 @@ if __name__ == "__main__":
     print(datas)
     fig,ax = plt.subplots()
     ax.set_prop_cycle('color',[plt.cm.hot(i) for i in np.linspace(0.1, 0.8, n)])
-    for evar, marker in zip(datas.items(),Line2D.markers) :
+    markers = Line2D.markers
+    del markers[None]
+    del markers['.']
+    del markers[',']
+    for evar, marker in zip(datas, markers) :
         eps, variance = evar
-        ax.plot(variance[:,0], variance[:,1], marker = marker, label = eps)
+        variance = variance[variance[:, 0].argsort()] ## Sorts the variance on the basis of coverage
+        ax.plot(variance[:,0], variance[:,1], marker = marker, label = r"$\frac{\Delta E}{k_bT}$:"+f"{eps}")
 
     ax.set_title('Variance vs Coverage')
     ax.set_xlabel(r'Coverage$\to$')
-    ax.set_ylabel(r'$\sigma_E$$\to$')
+    ax.set_ylabel(r'$\sigma_E^2$$\to$')
     ax.legend() 
     fig.savefig(f"{path}/varE.png")
-
-
-
-
 

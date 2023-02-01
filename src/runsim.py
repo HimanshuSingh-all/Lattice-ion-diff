@@ -50,7 +50,7 @@ def run_simulations(coverages:list,epsilon:float)->None:
 
 if __name__ == "__main__":
     coverage =[100-4*i for i in range(1,7)]#[99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
-    epsilon =[3,4]# [i for i in range(1,4)]
+    epsilon =[1.5,2.5,3.5,4]# [i for i in range(1,4)]
     import os
     import glob
     

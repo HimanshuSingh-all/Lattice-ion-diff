@@ -1,9 +1,0 @@
-N=20
-NSTEPS=15000
-wp=100
-today=date.today()
-epsilon=2223/1300
-equilibriation=5000
-Ns=NSTEPS-equilibriation
-#coverage=100-np.array([i for i in range(1,60,1)])
-WT=wp

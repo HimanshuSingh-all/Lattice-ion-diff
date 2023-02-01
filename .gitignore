@@ -1,3 +1,6 @@
 *.swp
+*.pdf
 *.swo
-
+env/
+envm/*
+token.txt
