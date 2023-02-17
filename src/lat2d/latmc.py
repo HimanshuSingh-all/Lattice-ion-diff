@@ -61,7 +61,7 @@ class lat_2d:
             lattice[ tuple(A[b]) ]+=self.epsilon 
             
         return lattice
-
+    
     def init_lattice(self):
         """ initialises the energy lattice """
         self.lattice,self.ionpos=self.get_lattice_2d()
