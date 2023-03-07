@@ -45,39 +45,61 @@ class lat_2d:
             ionc.append(tuple(A[b]))    
 
         return (lattice, ionc)
-
-    def get_energy_2d(self,sites:int):
+    
+    def get_energy_2d( self ):
         """
         creates and return the energy penalty lattice
         Keyword Arguments: 
         sites-- the number of energy packets (sites is probably not correct terminology as on site can get multiple energy packets)
         """
-        A=np.array([(i,j) for i in range(self.N) for j in range(self.N)])
-        B=np.arange(0,self.N**2)
-        ionc=list()                                                             #contains the intial position of all the occupying lattice ions
-        choice=np.random.choice(B,int(sites))#self.cov*self.N*self.N
-        lattice=np.zeros((self.N,self.N))
-        for b in choice:
-            lattice[ tuple(A[b]) ]+=self.epsilon 
-            
-        return lattice
-    
+        choices = [-1, 1]
+        enmatrix = np.zeros_like(self.lattice)
+        for i, row in enumerate(self.lattice):
+            for j, elem in enumerate(row):    
+                if elem==0:
+                    horizontal = choices[np.random.randint(2)]
+                    vertical = choices[np.random.randint(2)]
+                    ##  le '*' denote an oxygen occupied site 'o' be an emty oxygen site 
+                    
+                    ##   *              *
+                    ##     (1)     (2)
+                    ##   *      o       *
+                    ##     (3)     (4)
+                    ##   *      *       *          
+                    ##       
+                    ##   *      *       *          
+                    ## Now we can have a yrria in one of the (1),(2),(3),(4) sites
+                    ## Could have implemented loop to do this but im feeling too tired to figure ou the logic and 
+                    ## this has manageble
+                    pbcx = (i+horizontal)%self.lattice.shape[0]
+                    pbcy = (i+vertical)%self.lattice.shape[1]  
+                    enmatrix[i, j]+= self.epsilon
+                    enmatrix[pbcx, j]+= self.epsilon
+                    enmatrix[i, pbcy]+= self.epsilon
+                    enmatrix[pbcx, pbcy]+= self.epsilon    
+        return enmatrix
+
     def init_lattice(self):
         """ initialises the energy lattice """
         self.lattice,self.ionpos=self.get_lattice_2d()
+        
         for i,posn in enumerate(self.ionpos):
             self.ions.append(ion(i,posn))
+        
         print(f"{self.N}X{self.N} lattice with coverage {self.cov} initialised ({self.cov*self.N*self.N} ions")
-
+        return 
+    
     def init_energylattice(self,fac=2):
         """ 
         initialises the energy penalty lattice 
         """
-        self.enlattice=self.epsilon * ( np.ones( (self.N,self.N) ) - self.lattice )
-        print(f"{self.N}X{self.N} energy lattice with coverage {self.cov} initialised penalties)")
-        print(self.enlattice)
-        print("_________")
+        self.enlattice = self.get_energy_2d()
+        # self.enlattice=self.epsilon * ( np.ones( (self.N,self.N) ) - self.lattice )
+        # print(f"{self.N}X{self.N} energy lattice with coverage {self.cov} initialised penalties)")
+        # print(self.enlattice)
 
+        return 
+    
     def mappostolat(self,s,i:int):
         """
         returns 2-tuple of indices for the mapped position of ion onto the lattice if that step is taken
@@ -89,6 +111,7 @@ class lat_2d:
         if s is None:
             s=np.array((0,0))
         nextstep=np.array(self.ions[i].pos)+s
+    
         return tuple(nextstep%self.N)
         
 
@@ -145,12 +168,16 @@ class lat_2d:
 
 
 if __name__=='__main__':
+    
+    checklat = lat_2d(3 , 8/9 , 1 , 1000)
+    print(checklat.lattice)
+    print(checklat.enlattice)
+    """
     write=0
     N=20
     NSTEPS=100000
     WT=100
     today=date.today()
-
     coverage=[10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0]
     for cov in coverage:
         day=today.strftime("%B-%d-%Y")
@@ -171,3 +198,4 @@ if __name__=='__main__':
                     for io in mylat.ions:
                         fhand.write(f"{io.pos[0]}  {io.pos[1]} \n")
 
+    """
