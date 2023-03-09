@@ -13,22 +13,39 @@ class ion:
 
 class lat_2d:
 
-    def __init__(self, N:int, coverage:float, epsilon:float, equilibriation:int):
-        
-        if coverage>=1 or coverage<=0:
+    def __init__(self, 
+                args = {'N':20, 'coverage':70, 'epsilon':1.5, 'J':1, 
+                'equilibriation':10000, 'assignment':{'way':'vacancy'}}):
+        """
+        TODO: make the dosctring
+
+        Args:
+            args (dict, optional): _description_. Defaults to {'N':20, 'coverage':70, 'epsilon':1.5, 'J':1, 'equilibriation':10000, 'assignment':{'way':'vacancy'}}.
+
+        Raises:
+            ValueError: _description_
+        """
+        #THis is bad, but it will work, ideally one would implement typecheck for the values
+        if args['coverage']>=1 or args['coverage']<=0:
             print(f"Coverage of {coverage} bot allowed!!")
             raise ValueError(f"Coverage of {coverage} not allowed!!")
 
-        self.N=N
-        self.epsilon=epsilon                    # Value of the Energy Penalty
-        self.cov=coverage
+        self.N=args['N']
+        self.epsilon=args['epsilon']            # Value of the Energy Penalty
+        self.J = args['J']                              #interaction term between ions 
+        self.cov=args['coverage']
         self.ions=list()        
         self.rejection = 0                      # number of moves rejected
         self.total = 0                          # total moves proposed
-        self.equilibriation = equilibriation    # Equiibriation Steps 
+        self.equilibriation = args['equilibriation']    # Equiibriation Steps 
         self.enreject = 0                       # check for the energy metropolis rejection
-        self.init_lattice()
-        self.init_energylattice()
+        self.assignmentstyle = args['assignment']
+        
+        # NOTE: Always define the lattice before the enlattice, 
+        # DO NOT change the ordering
+        
+        self.init_lattice()                                   
+        self.enlattice = self.get_energy_2d(self.assignmentstyle)
 
     def get_lattice_2d(self):
         """
@@ -46,37 +63,64 @@ class lat_2d:
 
         return (lattice, ionc)
     
-    def get_energy_2d( self ):
+    def get_energy_2d( self, assignment ={'way':'vacancy'}):
         """
-        creates and return the energy penalty lattice
-        Keyword Arguments: 
-        sites-- the number of energy packets (sites is probably not correct terminology as on site can get multiple energy packets)
+        Creates and return the energy penalty lattice.\n
+        Keyword Arguments:-\n
+        assginment (dict): 
+        The way in which we define the enegy lattice.
+        It is required to contain the key 'way' which defines the way in which we
+        assign the energy penalties. 
+        Returns:-\n
+        enmatrix (ndarray): A numpy ndaaray of same size as the attendence lattice\n 
+                            after applying the site the energy according to the prescribed scheme. 
         """
-        choices = [-1, 1]
-        enmatrix = np.zeros_like(self.lattice)
-        for i, row in enumerate(self.lattice):
-            for j, elem in enumerate(row):    
-                if elem==0:
-                    horizontal = choices[np.random.randint(2)]
-                    vertical = choices[np.random.randint(2)]
-                    ##  le '*' denote an oxygen occupied site 'o' be an emty oxygen site 
-                    
-                    ##   *              *
-                    ##     (1)     (2)
-                    ##   *      o       *
-                    ##     (3)     (4)
-                    ##   *      *       *          
-                    ##       
-                    ##   *      *       *          
-                    ## Now we can have a yrria in one of the (1),(2),(3),(4) sites
-                    ## Could have implemented loop to do this but im feeling too tired to figure ou the logic and 
-                    ## this has manageble
-                    pbcx = (i+horizontal)%self.lattice.shape[0]
-                    pbcy = (i+vertical)%self.lattice.shape[1]  
-                    enmatrix[i, j]+= self.epsilon
-                    enmatrix[pbcx, j]+= self.epsilon
-                    enmatrix[i, pbcy]+= self.epsilon
-                    enmatrix[pbcx, pbcy]+= self.epsilon    
+        #TODO: implement 'random assignment 
+        if 'way' not in assignment:
+            raise KeyError(' "way" should be a key in the argument assigment dictionary')
+        
+        
+        if assignment['way']=='coordination':  
+            choices = [-1, 1]
+            enmatrix = np.zeros_like(self.lattice)
+            for i, row in enumerate(self.lattice):
+                for j, elem in enumerate(row):    
+                    if elem==0:
+                        horizontal = choices[np.random.randint(2)]
+                        vertical = choices[np.random.randint(2)]
+                        ##  le '*' denote an oxygen occupied site 'o' be an emty oxygen site 
+                        
+                        ##   *              *
+                        ##     (1)     (2)
+                        ##   *      o       *
+                        ##     (3)     (4)
+                        ##   *      *       *          
+                        ##       
+                        ##   *      *       *          
+                        ## Now we can have a yttria in one of the (1),(2),(3),(4) sites
+                        ## Could have implemented loop to do this but im feeling too tired to figure out the logic and 
+                        ## this is manageble manually
+                        pbcx = (i+horizontal)%self.lattice.shape[0]
+                        pbcy = (i+vertical)%self.lattice.shape[1]  
+                        enmatrix[i, j]+= self.epsilon
+                        enmatrix[pbcx, j]+= self.epsilon
+                        enmatrix[i, pbcy]+= self.epsilon
+                        enmatrix[pbcx, pbcy]+= self.epsilon    
+        
+        if assignment['way']=='onvacancy':
+            enmatrix = ( np.ones( (self.N,self.N) ) - self.lattice )* self.epsilon
+        
+        if assignment['way'] == 'random':
+            if 'sites_per_vacancy' not in assignment:
+                raise KeyError(' For the random way of energy penalty assignment'
+                               ' another key value pair of "sites_per_vacancy": '
+                               'integer should be in assignment dictionary argument.')
+
+            if type(assignment['sites_per_vacancy']) is not int:
+                raise TypeError('The container of "sites_per_vacancy"'
+                                'should be of type int.') 
+            pass
+
         return enmatrix
 
     def init_lattice(self):
@@ -89,75 +133,91 @@ class lat_2d:
         print(f"{self.N}X{self.N} lattice with coverage {self.cov} initialised ({self.cov*self.N*self.N} ions")
         return 
     
-    def init_energylattice(self,fac=2):
-        """ 
-        initialises the energy penalty lattice 
-        """
-        self.enlattice = self.get_energy_2d()
-        # self.enlattice=self.epsilon * ( np.ones( (self.N,self.N) ) - self.lattice )
-        # print(f"{self.N}X{self.N} energy lattice with coverage {self.cov} initialised penalties)")
-        # print(self.enlattice)
-
-        return 
     
-    def mappostolat(self,s,i:int):
+    
+    def mappostolat(self,s,ion_no:int)->tuple:
         """
-        returns 2-tuple of indices for the mapped position of ion onto the lattice if that step is taken
-        Args:
-        s(2-D numpy vector): the random next step (coordination number 4) # if None is passed it means no step is taken
-        Returns:
-        i(int): index of the ion lattice ion
+        Returns 2-tuple of indices for the mapped position of ion onto the lattice if that step is taken\n
+        Args:\n
+        s(2-D numpy vector): the random next step (coordination number 4) # if None is passed it means no step is taken\n
+        Returns:\n
+        ion_no (int): index of the ion lattice ion
         """
         if s is None:
             s=np.array((0,0))
-        nextstep=np.array(self.ions[i].pos)+s
+        nextstep=np.array(self.ions[ion_no].pos)+s
     
         return tuple(nextstep%self.N)
-        
 
-    def oneionstep(self,i):
-        """ Move a given ion using the metropolis algorithm
 
-        Keyword Arguments:
-        i-- the index of the ion
+    def energy_change(self, current_pos:tuple, move_proposed:tuple)->float:
+        """Calculates the change of the energy of the system for a given move 
+            according to our given prescription.\n
 
-        Additional:
-        # s is an array but class.pos is a tuple,
-        # so we add them by converting pos into ndarray
-        # and then revert it back to tuple
+            We consider lattice gas model-like hamiltonian to calculate the energy change.
+        """
+        def central_energy(index:tuple)->float:
+            # TODO: Complete this
+            E_ion_pairings = None # calculate ion pairings interaction energy
+            pass 
+
+        return central_energy(move_proposed) - central_energy(current_pos)
+
+    def oneionstep(self,ion_no)->None:
+        """ Move a given ion using the metropolis algorithm\n
+
+        Keyword Arguments:\n
+        ion_no: the index of the ion that will be moved\n
+
+        Returns:\n
+        Returns Nothing, but it updates the lattice attribute according to the prescribe metropolis algorithm.\n
+
+        Additional:\n
+        # s is an array but class.pos is a tuple,\n
+        # so we add them by converting pos into ndarray\n
+        # and then revert it back to tuple\n
         """
         MOVES=[(1,0),(0,1),(-1,0),(0,-1)]
         s=np.array(MOVES[np.random.choice([0,1,2,3])])                                      
-        latposn=self.mappostolat(s,i)
-        delU=self.enlattice[latposn]-self.enlattice[self.mappostolat(None,i)]
+        new_proposed_position=self.mappostolat(s,ion_no)
+        delU=self.enlattice[new_proposed_position]-self.enlattice[self.mappostolat(None,ion_no)]
         rnd=np.random.uniform(0,1)
         prob=np.exp(-delU)
         self.total+=1
-        self.ions[i].step+=1
+        self.ions[ion_no].step+=1
 
-        if self.lattice[latposn]!=1 and prob>=rnd:                                            #if there is no ion in the step chosen
-            self.lattice[self.mappostolat(None,i)]=0                                         #vacate teh current position in the lattice   
-            self.ions[i].pos=tuple(np.array(self.ions[i].pos)+s)                             #update the ion position
-            self.lattice[latposn]=1                                                          #update the new filled position
-        elif prob<rnd:
+        if self.lattice == 1:
             self.rejection += 1
-            self.enreject +=1
         else:
-            self.rejection += 1
+            delU= self.energy_change(ion_no)
+            #self.enlattice[new_proposed_position]-self.enlattice[self.mappostolat(None,i)]
+            rnd=np.random.uniform(0,1)
+            prob=np.exp(-delU)
+            
+            if delU<0 or rnd<prob: #TODO Check the 2nd condition (the condition after or)
+                self.lattice[self.mappostolat(None,ion_no)]=0                                         #vacate teh current position in the lattice   
+                self.ions[ion_no].pos=tuple(np.array(self.ions[ion_no].pos)+s)                             #update the ion position
+                self.lattice[new_proposed_position]=1                                                          #update the new filled position
+            else:
+                self.rejection += 1
+                
         return None
 
-    def onemcstep(self):
+    def onemcstep(self)->None:
         if len(self.ions)!=0:
             [self.oneionstep(i) for i in range(len(self.ions))]
         else:
             self.init_lattice()
             self.onemcstep()
     
-    def energy(self, *args, **kwargs):
-        """ Returns the Energy of the lattice """ 
-        return np.sum( np.multiply( self.lattice , self.enlattice ) )
+    def energy(self, *args, **kwargs)->float:
+        """ Returns the Energy of the lattice \n
+        
+        """ 
+        # Use the numpy matrix element by element multiplication as it is faster
+        return np.sum( np.multiply( self.lattice , self.enlattice ) ) #
 
-    def average_energy(self):
+    def average_energy(self)->float:
         """ Returns the average energy of the Lattice """
         a = self.energy()
         return a/len(self.ions)
