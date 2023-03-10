@@ -3,22 +3,45 @@ import numpy as np
 write=0
 equilibriation = 10000
 N=20
-NSTEPS=100000
+NSTEPS= 100000
 WT=100
+J=1
+ENASSIGNMENT = {'way':'onvacancy'}
 
-def run_simulations(coverages:list,epsilon:float)->None:
+#TODO: UPDATE how the lat_2d object is initailised.
+
+def run_simulations(coverages:list,epsilon:float, ion_interaction:float)->None:
     """ Runs the simulations with the given parameters 
-    --Keyword Arguments:
-    # coverage(list) : list of coverages 
+    Keyword Arguments:
+        coverage(list) : list of coverages(in%) in range of 0-100, the function 
+        will automatically convert it into the range of 0 to 1. 
+
+        epsilon(float) : The value of energy penalty (in terms of kT).
+
+        ion_interaction(float) : the nearest neighbour interaction energy between the ions 
+        (in terms of kT).
+
     """
     for cov in coverages:
         fname=f"{cov}-NSTEPS{NSTEPS}.txt"
         ename=f"{cov}-NSTEPS{NSTEPS}-energy.txt"
+        import time
+        init = time.time()
         with open(fname,'w+') as fhand, open(ename,'w+') as ehand:
-
-            mylat=latmc.lat_2d(N,cov/100,epsilon,equilibriation)
+            
+            runparams = {
+                            'N':N,
+                            'coverage': cov/100,
+                            'J':J,
+                            'epsilon':epsilon,
+                            'equilibriation':equilibriation,
+                            'assignment': ENASSIGNMENT
+                        }
+            
+            mylat=latmc.lat_2d(runparams)
             NIONS=len(mylat.ions)
             fhand.write(f"Coverage:{cov}\n")           
+
             for i in range(NSTEPS):
                 mylat.onemcstep()
 
@@ -37,28 +60,34 @@ def run_simulations(coverages:list,epsilon:float)->None:
                         fhand.write(f"{io.pos[1]} ")
 
                     fhand.write("\n")
-
+        
             with open('newrr.txt','a+') as fhand:  
-                fhand.write(f"Coverage  {cov}  Rejection {mylat.rejection} Total {mylat.total} Rejection-Ratio {mylat.rejection/mylat.total} EnRejection {mylat.enreject} Enrejection-Ratio : {mylat.enreject/mylat.total} "+"\n")            
-            
+                fhand.write( ( f"Coverage  {cov}  Rejection {mylat.rejection} Total {mylat.total}"
+                               f"Rejection-Ratio {mylat.rejection/mylat.total} EnRejection {mylat.enreject}"
+                               f" Enrejection-Ratio : {mylat.enreject/mylat.total} \n"
+                            ) )            
         with open(f'FinalState-{cov}.txt','w+') as fhand:  
             np.savetxt(fhand,mylat.lattice)
 
         with open(f'FinalENState-{cov}.txt','a+') as fhand:  
             np.savetxt(fhand,mylat.enlattice)
+        final = time.time()
+        print(f'time taken for cov:{cov} is {final-init}')
+        print("_________")
+
     
 
 if __name__ == "__main__":
-    coverage =[100-4*i for i in range(1,7)]#[99 ,98, 97, 96, 95, 94, 93,  92, 91, 90, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 52, 50]
-    epsilon =[1.5,2.5,3.5,4]# [i for i in range(1,4)]
+    coverage = [100 - 4*v for v in range(1,9)]
+    epsilon =[ 1, 2 ] 
     import os
     import glob
-    
+
     for eps in epsilon:
-        nruns = len(glob.glob("Data-*"))
+        nruns = len(glob.glob("Data-*")) 
         os.mkdir(f"Data-{nruns}")
         os.chdir(f"Data-{nruns}")
-        run_simulations(coverage,eps)
+        run_simulations(coverage, eps, J)
         with open('parameters.txt','w+') as f:
             f.write(f"epsilon:{eps} \n")
             f.write(f"WRITE-PERIODICITY:{WT} \n")
@@ -66,7 +95,6 @@ if __name__ == "__main__":
             f.write(f"EQL:{equilibriation} \n")
             f.write(f"N:{N}")
         os.chdir("..")
-
 
 """
  fhand.write(f"Created:{day} \n")

@@ -5,16 +5,16 @@ import glob
 
 
 
-def givepaths(elem):
+def givepaths(elem:int,endmatchstr:str):
     if elem <6:
-        print(f"Dataset {elem} doesn't support variance since it is before Set-7") 
+        print(f"Dataset {elem} doesn't support variance since it is before Set-6") 
         print("ignoring it ...")
         return _
     path = f"Datasets/Set-{elem}"
     for dat in glob.glob(f"{path}/*"):
         if dat.split('.')[-1] == 'png':
             continue
-        yield (dat,glob.glob(f"{dat}/*-energy.txt"))
+        yield (dat,glob.glob(f"{dat}/*{endmatchstr}.txt"))
 
 def calc_variance(vector):
     """
@@ -39,7 +39,7 @@ def var_calcs(dir_file:tuple):
 if __name__ == "__main__":
 
     files = 7
-    a=givepaths(files)
+    a=givepaths(files,"-energy")
     path = f"Datasets/Set-{files}"
     datas = list()
     for dir_file in a:
@@ -48,28 +48,28 @@ if __name__ == "__main__":
             eps = fhand.read().split(':')[1].split('\n')[0]
             
             plotit =  var_calcs(dir_file)
-            datas.append([int(eps), plotit])
-            plt.plot(plotit[:,0], plotit[:,1], alpha = 0.5, marker= 'x')
+            plotit = plotit[plotit[:, 0].argsort()] ## Sorts the variance on the basis of coverage
+            datas.append([float(eps.rstrip()), plotit])
+            plt.plot(plotit[:,0], plotit[:,1], alpha = 1, marker= 'x')
             plt.xlabel(r'Coverage$\to$')
             plt.ylabel(r'$\sigma_E^2$')
-            plt.savefig(f"{dire}/varE-{eps}.png")
+            plt.savefig(f"{dire}/varE-{eps}.png", dpi=400)
     
     n = len(datas)
     print(datas)
     fig,ax = plt.subplots()
-    ax.set_prop_cycle('color',[plt.cm.hot(i) for i in np.linspace(0.1, 0.8, n)])
+    ax.set_prop_cycle('color',[plt.cm.viridis(i) for i in np.linspace(0, 0.8, n)])
     markers = Line2D.markers
     del markers[None]
     del markers['.']
     del markers[',']
     for evar, marker in zip(datas, markers) :
         eps, variance = evar
-        variance = variance[variance[:, 0].argsort()] ## Sorts the variance on the basis of coverage
         ax.plot(variance[:,0], variance[:,1], marker = marker, label = r"$\frac{\Delta E}{k_bT}$:"+f"{eps}")
 
-    ax.set_title('Variance vs Coverage')
+    ax.set_title(r'$\sigma_E^2$ vs Coverage')
     ax.set_xlabel(r'Coverage$\to$')
     ax.set_ylabel(r'$\sigma_E^2$$\to$')
-    ax.legend() 
-    fig.savefig(f"{path}/varE.png")
+    ax.legend()
+    fig.savefig(f"{path}/varE.png",dpi=400,bbox_inches='tight')
 

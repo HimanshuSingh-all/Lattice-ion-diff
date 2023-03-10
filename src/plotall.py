@@ -32,7 +32,7 @@ def plot_onebyone(plotwhat, path:str, traj:tuple, typ ='energy'):
         l = len(glob.glob('*.png')) 
         plt.savefig(f'{path}/{l}-{cov}.png', dpi = 300)
         plt.show(block=False)
-        plt.pause(2)
+        plt.pause(1)
         plt.close()
         
 def plot_all(plotwhat, path:str, traj:tuple, typ ='energy', what:str = 'en'):    
@@ -52,8 +52,8 @@ def plot_all(plotwhat, path:str, traj:tuple, typ ='energy', what:str = 'en'):
 
 if __name__ =='__main__':
     
-    se = 6
-    fpaths= glob.glob(f"Datasets/Set-{se}/Data-*")
+    se = 11
+    fpaths= glob.glob(f"Datasets/Set-{se}/Data-0")
     print(fpaths)
     for pat in fpaths:
         plot_onebyone(MC.plot_energy_vs_steps, pat, (0,1))

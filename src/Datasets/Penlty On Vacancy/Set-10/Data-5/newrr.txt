@@ -1,0 +1,8 @@
+Coverage  96  Rejection 9569184 Total 9600000 Rejection-Ratio 0.99679 EnRejection 386355 Enrejection-Ratio : 0.0402453125 
+Coverage  92  Rejection 9163757 Total 9200000 Rejection-Ratio 0.9960605434782609 EnRejection 746836 Enrejection-Ratio : 0.08117782608695652 
+Coverage  88  Rejection 8753024 Total 8800000 Rejection-Ratio 0.9946618181818182 EnRejection 1068258 Enrejection-Ratio : 0.12139295454545454 
+Coverage  84  Rejection 8338489 Total 8400000 Rejection-Ratio 0.9926772619047619 EnRejection 1341271 Enrejection-Ratio : 0.15967511904761905 
+Coverage  76  Rejection 7533424 Total 7600000 Rejection-Ratio 0.99124 EnRejection 1883879 Enrejection-Ratio : 0.24787881578947368 
+Coverage  72  Rejection 7130406 Total 7200000 Rejection-Ratio 0.9903341666666666 EnRejection 2004671 Enrejection-Ratio : 0.27842652777777777 
+Coverage  68  Rejection 6718748 Total 6800000 Rejection-Ratio 0.9880511764705883 EnRejection 2234203 Enrejection-Ratio : 0.32855926470588237 
+Coverage  64  Rejection 6315126 Total 6400000 Rejection-Ratio 0.9867384375 EnRejection 2330772 Enrejection-Ratio : 0.364183125 

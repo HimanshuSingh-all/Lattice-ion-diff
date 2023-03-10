@@ -1,0 +1,20 @@
+Coverage  96  Rejection 37359682 Total 38400000 Rejection-Ratio 0.9729083854166667 EnRejection 1340069 Enrejection-Ratio : 0.034897630208333336 
+Coverage  94  Rejection 36076049 Total 37500000 Rejection-Ratio 0.9620279733333333 EnRejection 2058381 Enrejection-Ratio : 0.05489016 
+Coverage  92  Rejection 35158754 Total 36800000 Rejection-Ratio 0.9554009239130434 EnRejection 2679351 Enrejection-Ratio : 0.07280845108695652 
+Coverage  90  Rejection 34129133 Total 36000000 Rejection-Ratio 0.9480314722222222 EnRejection 3286233 Enrejection-Ratio : 0.09128425 
+Coverage  88  Rejection 33141091 Total 35200000 Rejection-Ratio 0.9415082670454545 EnRejection 3935352 Enrejection-Ratio : 0.11179977272727273 
+Coverage  86  Rejection 32037362 Total 34400000 Rejection-Ratio 0.9313186627906976 EnRejection 3995997 Enrejection-Ratio : 0.1161627034883721 
+Coverage  84  Rejection 31130360 Total 33600000 Rejection-Ratio 0.9264988095238095 EnRejection 4713103 Enrejection-Ratio : 0.1402709226190476 
+Coverage  82  Rejection 30219937 Total 32800000 Rejection-Ratio 0.9213395426829268 EnRejection 5293206 Enrejection-Ratio : 0.16137823170731708 
+Coverage  80  Rejection 29217002 Total 32000000 Rejection-Ratio 0.9130313125 EnRejection 5474148 Enrejection-Ratio : 0.171067125 
+Coverage  78  Rejection 28337452 Total 31200000 Rejection-Ratio 0.9082516666666667 EnRejection 5997083 Enrejection-Ratio : 0.19221419871794873 
+Coverage  76  Rejection 27398813 Total 30400000 Rejection-Ratio 0.9012767434210527 EnRejection 6251494 Enrejection-Ratio : 0.20564125 
+Coverage  74  Rejection 26485126 Total 29600000 Rejection-Ratio 0.8947677702702703 EnRejection 6510637 Enrejection-Ratio : 0.2199539527027027 
+Coverage  72  Rejection 25686866 Total 28800000 Rejection-Ratio 0.8919050694444445 EnRejection 7103700 Enrejection-Ratio : 0.24665625 
+Coverage  68  Rejection 23982626 Total 27200000 Rejection-Ratio 0.8817141911764705 EnRejection 7713246 Enrejection-Ratio : 0.2835752205882353 
+Coverage  64  Rejection 22110551 Total 25600000 Rejection-Ratio 0.8636933984375 EnRejection 7479592 Enrejection-Ratio : 0.2921715625 
+Coverage  60  Rejection 20545080 Total 24000000 Rejection-Ratio 0.856045 EnRejection 8104404 Enrejection-Ratio : 0.3376835
+
+
+
+

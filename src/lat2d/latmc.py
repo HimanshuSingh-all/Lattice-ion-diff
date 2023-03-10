@@ -14,8 +14,8 @@ class ion:
 class lat_2d:
 
     def __init__(self, 
-                args = {'N':20, 'coverage':70, 'epsilon':1.5, 'J':1, 
-                'equilibriation':10000, 'assignment':{'way':'vacancy'}}):
+                args = {'N':20, 'coverage':0.7, 'epsilon':1.5, 'J':1, 
+                'equilibriation':10000, 'assignment':{'way':'onvacancy'}}):
         """
         TODO: make the dosctring
 
@@ -25,10 +25,10 @@ class lat_2d:
         Raises:
             ValueError: _description_
         """
-        #THis is bad, but it will work, ideally one would implement typecheck for the values
+        #This is bad, but it will work, ideally one would implement typecheck for the values
         if args['coverage']>=1 or args['coverage']<=0:
-            print(f"Coverage of {coverage} bot allowed!!")
-            raise ValueError(f"Coverage of {coverage} not allowed!!")
+            print(f"Coverage of {args['coverage']} bot allowed!!")
+            raise ValueError(f"Coverage of {args['coverage']} not allowed!!")
 
         self.N=args['N']
         self.epsilon=args['epsilon']            # Value of the Energy Penalty
@@ -106,11 +106,10 @@ class lat_2d:
                         enmatrix[pbcx, j]+= self.epsilon
                         enmatrix[i, pbcy]+= self.epsilon
                         enmatrix[pbcx, pbcy]+= self.epsilon    
-        
-        if assignment['way']=='onvacancy':
+        elif assignment['way']=='onvacancy':
             enmatrix = ( np.ones( (self.N,self.N) ) - self.lattice )* self.epsilon
         
-        if assignment['way'] == 'random':
+        elif assignment['way'] == 'random':
             if 'sites_per_vacancy' not in assignment:
                 raise KeyError(' For the random way of energy penalty assignment'
                                ' another key value pair of "sites_per_vacancy": '
@@ -120,10 +119,11 @@ class lat_2d:
                 raise TypeError('The container of "sites_per_vacancy"'
                                 'should be of type int.') 
             pass
-
+        else:
+            raise KeyError(f'{assignment["way"]} is not a valid way of assigning energy penalties!')
         return enmatrix
 
-    def init_lattice(self):
+    def init_lattice(self)->None:
         """ initialises the energy lattice """
         self.lattice,self.ionpos=self.get_lattice_2d()
         
@@ -150,26 +150,28 @@ class lat_2d:
         return tuple(nextstep%self.N)
 
 
-    def energy_change(self, current_pos:tuple, move_proposed:tuple)->float:
+    def energy_change(self, ion_no, displace )->float:
         """Calculates the change of the energy of the system for a given move 
             according to our given prescription.\n
 
             We consider lattice gas model-like hamiltonian to calculate the energy change.
 
             Arguments:-
-                current_pos(tuple): tuple of indices of the particle with it's current indices on the lattice.
+                ion_no: the index of the ion which is to be moved
 
-                move_proposed(tuple):
+                displace: the displacement move that is propsed randomly
 
         """
+        current_pos = self.mappostolat(None,ion_no)
+        move_proposed = self.mappostolat(displace,ion_no)
         # TODO: Test this function
         def central_energy(index:tuple)->float:
-            x,y = index
+            r,c = index
             # calculate ion pairings interaction energy
-            E_ion_pairings =( (self.lattice[(x+1)%self.N,y%self.N] 
-                            + self.lattice[(x)%self.N,(y+1)%self.N]    
-                            + self.lattice[(x-1)%self.N,y%self.N]
-                            + self.lattice[(x)%self.N,(y-1)%self.N] 
+            E_ion_pairings =( (self.lattice[(r+1)%self.N,c%self.N] 
+                            + self.lattice[r%self.N,(c+1)%self.N]    
+                            + self.lattice[(r-1)%self.N,c%self.N]
+                            + self.lattice[r%self.N,(c-1)%self.N] 
                             )  * self.J * self.lattice[index] )
             
             E_site = self.enlattice[index] * self.lattice[index]
@@ -193,7 +195,7 @@ class lat_2d:
         
         return (E_b - E_a) 
 
-    def oneionstep(self,ion_no)->None:
+    def oneionstep(self,ion_no, Test=False)->None:
         """ Move a given ion using the metropolis algorithm\n
 
         Keyword Arguments:\n
@@ -208,18 +210,25 @@ class lat_2d:
         # and then revert it back to tuple\n
         """
         MOVES=[(1,0),(0,1),(-1,0),(0,-1)]
-        s=np.array(MOVES[np.random.choice([0,1,2,3])])                                      
-        new_proposed_position=self.mappostolat(s,ion_no)
-        delU=self.enlattice[new_proposed_position]-self.enlattice[self.mappostolat(None,ion_no)]
-        rnd=np.random.uniform(0,1)
-        prob=np.exp(-delU)
-        self.total+=1
-        self.ions[ion_no].step+=1
-
-        if self.lattice == 1:
+        if not Test:
+            s=np.array(MOVES[np.random.choice([0,1,2,3])])                                      
+            new_proposed_position=self.mappostolat(s,ion_no)
+            # delU=self.enlattice[new_proposed_position]-self.enlattice[self.mappostolat(None,ion_no)]
+            # rnd=np.random.uniform(0,1)
+            # prob=np.exp(-delU)
+            self.total+=1
+            self.ions[ion_no].step+=1
+        else:
+            # raise NotImplementedError
+            print([ (moves,i) for i, moves in enumerate(MOVES)])
+            s = np.array(MOVES[int(input('Enter the  index of the move: '))])
+            new_proposed_position=self.mappostolat(s,ion_no)
+            print(new_proposed_position, self.ions[ion_no].pos)
+            
+        if self.lattice[new_proposed_position] == 1:
             self.rejection += 1
         else:
-            delU= self.energy_change(ion_no)
+            delU= self.energy_change(ion_no, s)
             #self.enlattice[new_proposed_position]-self.enlattice[self.mappostolat(None,i)]
             rnd=np.random.uniform(0,1)
             prob=np.exp(-delU)
@@ -243,6 +252,7 @@ class lat_2d:
     def energy(self, *args, **kwargs)->float:
         """ Returns the Energy of the lattice \n
         """ 
+        # TODO: Change this to include the interaction terms
         # Use the numpy matrix element by element multiplication as it is faster
         return np.sum( np.multiply( self.lattice , self.enlattice ) ) #
 
@@ -257,10 +267,25 @@ class lat_2d:
 
 
 if __name__=='__main__':
-    
-    checklat = lat_2d(3 , 8/9 , 1 , 1000)
+    np.random.seed()
+    testdict = { 
+                    "N":3,
+                    "coverage":3/9,
+                    'epsilon':0,
+                    'J':1,
+                    'equilibriation':1000,
+                    'assignment':{ 'way': 'onvacancy'}
+               }
+
+    checklat = lat_2d(testdict)
     print(checklat.lattice)
     print(checklat.enlattice)
+    print([(chad.pos,i)  for i,chad in enumerate(checklat.ions)])
+
+    checklat.oneionstep(2, Test= True)
+    print(checklat.lattice)
+    print(checklat.enlattice)
+    print([(chad.pos,i)  for i,chad in enumerate(checklat.ions)])
     """
     write=0
     N=20
