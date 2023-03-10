@@ -139,9 +139,9 @@ class lat_2d:
         """
         Returns 2-tuple of indices for the mapped position of ion onto the lattice if that step is taken\n
         Args:\n
-        s(2-D numpy vector): the random next step (coordination number 4) # if None is passed it means no step is taken\n
+            s(2-D numpy vector): the random next step (coordination number 4) # if None is passed it means no step is taken\n
         Returns:\n
-        ion_no (int): index of the ion lattice ion
+            ion_no (int): index of the ion lattice ion
         """
         if s is None:
             s=np.array((0,0))
@@ -155,13 +155,43 @@ class lat_2d:
             according to our given prescription.\n
 
             We consider lattice gas model-like hamiltonian to calculate the energy change.
-        """
-        def central_energy(index:tuple)->float:
-            # TODO: Complete this
-            E_ion_pairings = None # calculate ion pairings interaction energy
-            pass 
 
-        return central_energy(move_proposed) - central_energy(current_pos)
+            Arguments:-
+                current_pos(tuple): tuple of indices of the particle with it's current indices on the lattice.
+
+                move_proposed(tuple):
+
+        """
+        # TODO: Test this function
+        def central_energy(index:tuple)->float:
+            x,y = index
+            # calculate ion pairings interaction energy
+            E_ion_pairings =( (self.lattice[(x+1)%self.N,y%self.N] 
+                            + self.lattice[(x)%self.N,(y+1)%self.N]    
+                            + self.lattice[(x-1)%self.N,y%self.N]
+                            + self.lattice[(x)%self.N,(y-1)%self.N] 
+                            )  * self.J * self.lattice[index] )
+            
+            E_site = self.enlattice[index] * self.lattice[index]
+
+            return ( E_ion_pairings + E_site )
+        
+        E_a = central_energy(current_pos)
+        
+        # when the particle moves, it vacates it's current position annd moves to the proposed move position 
+        # so before we calculate the energy change due to the move we must vacate the original site and fill 
+        # the new site.
+        self.lattice[current_pos] = 0
+        self.lattice[move_proposed] = 1
+        
+        E_b = central_energy(move_proposed)
+        
+        # Now that we have calculate the energy, we want to revert the move because in this function our only task
+        # is calculate the energy change is move is taken, the upadting task will be handled on basis of this change
+        self.lattice[current_pos] = 1
+        self.lattice[move_proposed] = 0 
+        
+        return (E_b - E_a) 
 
     def oneionstep(self,ion_no)->None:
         """ Move a given ion using the metropolis algorithm\n
@@ -212,7 +242,6 @@ class lat_2d:
     
     def energy(self, *args, **kwargs)->float:
         """ Returns the Energy of the lattice \n
-        
         """ 
         # Use the numpy matrix element by element multiplication as it is faster
         return np.sum( np.multiply( self.lattice , self.enlattice ) ) #
