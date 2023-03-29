@@ -6,12 +6,12 @@ import glob
 import numpy as np
 skiprows = 1
 def getrunparams(dire:str)->(dict,int):
-    """ Searches for one parameters.txt file on default in the specified folder then returns the run parameters (dictionary) and the length 
-    ** Keyword Arguments:
-    # dire: name of the directory in which the simulation data from a run is stored
+    """ # Searches for one parameters.txt file on default in the specified folder then returns the run parameters (dictionary) and the length 
+    ## Keyword Arguments:
+        *dire: name of the directory in which the simulation data from a run is stored
     _______________________________________________________________________________________________________________________________________
-    **Returns:
-    # ( params:dict , len(params): int ): dictionary of params and number of parameters 
+    ##Returns:
+        * ( params:dict , len(params): int ): dictionary of params and number of parameters 
     """
     fname= glob.glob("{dire}/parameters.txt")
     if fname is None:
@@ -57,13 +57,12 @@ def ensemble_sqavg(ndarray,fname,paramlen):
 def time_msd(fname,dire,**test):
     #traj: a numpy iXD
     """ gives the mean square displacement (time origin)
-    ** Keyword Arguments:
-    # fname: name of the simulation run file
-    # dire : directory in which the file is
-    # EQUILIBIRIATION : thermalisation time step length   
+    # Keyword Arguments:
+        * fname: name of the simulation run file
+        * dire : directory in which the file is 
     _______________________________________________________________________________________________________________________________________
-    ** Returns:
-    # [[ t, MSD(t) ]]
+    # Returns:
+        * [[ t, MSD(t) ]] ndarray
     """
     params,_=getrunparams(dire)                               # get the run parameters
     #s=int(params['NUM-IONS'])
@@ -76,7 +75,7 @@ def time_msd(fname,dire,**test):
     y = traj[1::2]
     print(tau)
     print(f"Opened this {fname} file:")
-    print(x ,"y:\n",y)
+    #print(x ,"y:\n",y)
     print(x.shape ,"y:\n",y.shape)
     mea=list()
     if x.shape != y.shape:

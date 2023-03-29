@@ -1,6 +1,6 @@
 import numpy as np
 from datetime import date
-np.random.seed()
+# np.random.seed() this is possibly dangerous
 
 class ion:
     def __init__(self,i:int,pos:tuple):
@@ -18,12 +18,24 @@ class lat_2d:
                 'equilibriation':10000, 'assignment':{'way':'onvacancy'}}):
         """
         TODO: make the dosctring
-
+        initialises the 2 Dimensional lattice object. The two main lattice attributes of concern are :
+            * lattice: the attendance matrix ndarray
+            * enlattice: the energy penalty matrix
         Args:
-            args (dict, optional): _description_. Defaults to {'N':20, 'coverage':70, 'epsilon':1.5, 'J':1, 'equilibriation':10000, 'assignment':{'way':'vacancy'}}.
+            args (dict): a dictionary with keys:
+                * 'N': the size if the lattice ( N X N grid)
+                * 'epsilon': the value of the energy penalties allotted for the vacancies
+                * 'J': the nearest neighbour interaction energy.
+                * 'coverage': the coverage of the lattice
+                * 'equilibriation' : the number of equilibriation( thermalisation ) steps to be taken
+                * 'assignment' : the way of assignment of the energy penalties, currently two ways to assign:
+                    *   'onvacancy'  : the energy packets are alloted where the vacancy is created.
+                    * 'coordination' : theenergy 
+                \n
+                Defaults to {'N':20, 'coverage':70, 'epsilon':1.5, 'J':1, 'equilibriation':10000, 'assignment':{'way':'vacancy'}}.
 
         Raises:
-            ValueError: _description_
+            ValueError:  when the coverage is 0 or less than 0 or it is greater than equal to 1 , we will have an unphysical situation ( for 1 there is no vacancy to hop so ther will be no diffusion).  
         """
         #This is bad, but it will work, ideally one would implement typecheck for the values
         if args['coverage']>=1 or args['coverage']<=0:
@@ -46,6 +58,11 @@ class lat_2d:
         
         self.init_lattice()                                   
         self.enlattice = self.get_energy_2d(self.assignmentstyle)
+        #NOTE: Delete this next 2 lines
+        print("Lattice")
+        print(self.lattice)
+        print("Energy Lattice")
+        print(self.enlattice)
 
     def get_lattice_2d(self):
         """
@@ -103,8 +120,8 @@ class lat_2d:
                         pbcx = (i+horizontal)%self.lattice.shape[0]
                         pbcy = (i+vertical)%self.lattice.shape[1]  
                         enmatrix[i, j]+= self.epsilon
-                        enmatrix[pbcx, j]+= self.epsilon
-                        enmatrix[i, pbcy]+= self.epsilon
+                        enmatrix[pbcy, j]+= self.epsilon
+                        enmatrix[i, pbcx]+= self.epsilon
                         enmatrix[pbcx, pbcy]+= self.epsilon    
         elif assignment['way']=='onvacancy':
             enmatrix = ( np.ones( (self.N,self.N) ) - self.lattice )* self.epsilon
@@ -118,9 +135,18 @@ class lat_2d:
             if type(assignment['sites_per_vacancy']) is not int:
                 raise TypeError('The container of "sites_per_vacancy"'
                                 'should be of type int.') 
-            pass
+            
+            A=np.array([(i,j) for i in range(self.N) for j in range(self.N)])
+            B=np.arange(0,self.N**2)
+            ionc=list()                                                             #contains the intial position of all the occupying lattice ions
+            sites = assignment['sites_per_vacancy'] * np.round(self.N**2 * ( 1 - self.cov ) )
+            choice=np.random.choice(B,int(sites))#self.cov*self.N*self.N
+            enmatrix=np.zeros((self.N,self.N))
+            for b in choice:
+                enmatrix[ tuple(A[b]) ]+=self.epsilon 
         else:
             raise KeyError(f'{assignment["way"]} is not a valid way of assigning energy penalties!')
+
         return enmatrix
 
     def init_lattice(self)->None:
@@ -254,7 +280,16 @@ class lat_2d:
         """ 
         # TODO: Change this to include the interaction terms
         # Use the numpy matrix element by element multiplication as it is faster
-        return np.sum( np.multiply( self.lattice , self.enlattice ) ) #
+        
+        total_site_energy = np.sum( np.multiply( self.lattice , self.enlattice ) )  
+
+        nn_energy = 0
+        for i, row in enumerate(self.lattice):
+            for j, site in enumerate(row):
+                unique_pairs = self.lattice[(i%self.N, (j-1)%self.N)] +self.lattice[((i-1)%self.N, (j)%self.N)]
+                nn_energy+= self.J * unique_pairs
+
+        return total_site_energy + nn_energy
 
     def average_energy(self)->float:
         """ Returns the average energy of the Lattice """
@@ -267,7 +302,7 @@ class lat_2d:
 
 
 if __name__=='__main__':
-    np.random.seed()
+    # np.random.seed()
     testdict = { 
                     "N":3,
                     "coverage":3/9,
@@ -278,6 +313,12 @@ if __name__=='__main__':
                }
 
     checklat = lat_2d(testdict)
+    checklat.lattice = np.array( [ [ 1 , 0 , 0 ], [ 1 , 0 , 0  ], [ 1 , 0 , 0  ]])
+    print(checklat.lattice,'\n', checklat.enlattice )
+
+
+    
+    """
     print(checklat.lattice)
     print(checklat.enlattice)
     print([(chad.pos,i)  for i,chad in enumerate(checklat.ions)])
@@ -286,30 +327,4 @@ if __name__=='__main__':
     print(checklat.lattice)
     print(checklat.enlattice)
     print([(chad.pos,i)  for i,chad in enumerate(checklat.ions)])
-    """
-    write=0
-    N=20
-    NSTEPS=100000
-    WT=100
-    today=date.today()
-    coverage=[10.0,20.0,30.0,40.0,50.0,60.0,70.0,80.0,90.0]
-    for cov in coverage:
-        day=today.strftime("%B-%d-%Y")
-        fname=f"simdata/Coverage-{cov}-NSTEPS{NSTEPS}-{day}.txt"
-        with open(fname,'w+') as fhand: 
-            mylat=lat_2d(N,cov/100)
-            mylat.init_lattice()
-            NIONS=len(mylat.ions)
-            fhand.write(f"Created:{day} \n")
-            fhand.write(f"Coverage:{cov} \n")
-            fhand.write(f"N:{N} \n")
-            fhand.write(f"NUM-IONS:{NIONS} \n")
-            fhand.write(f"NSTEPS:{NSTEPS} \n")
-            fhand.write(f"WRITE-PERIODICITY:{WT} \n")
-            for i,step in enumerate(range(NSTEPS)):
-                mylat.onemcstep()
-                if i%WT==0:
-                    for io in mylat.ions:
-                        fhand.write(f"{io.pos[0]}  {io.pos[1]} \n")
-
-    """
+"""

@@ -1,12 +1,14 @@
+##TODO: check Possible error with coordination assignment
+
 from lat2d import latmc
 import numpy as np
 write=0
-equilibriation = 10000
+equilibriation = 10000 #* 10 #NOTE: remove this * 10
 N=20
-NSTEPS= 100000
+NSTEPS= 100000 #* 10 #NOTE: remove this * 10 
 WT=100
-J=1
-ENASSIGNMENT = {'way':'onvacancy'}
+Js=  [0.25] #, 0.1,][0.5]
+ENASSIGNMENT = {'way':'random', 'sites_per_vacancy':2}
 
 #TODO: UPDATE how the lat_2d object is initailised.
 
@@ -47,7 +49,7 @@ def run_simulations(coverages:list,epsilon:float, ion_interaction:float)->None:
 
                 if i%WT == 0:
                     ehand.write(f"{i} ")
-                    ehand.write(f"{mylat.average_energy()} ")
+                    ehand.write(f"{mylat.energy()} ")
                     ehand.write(f"{mylat.rejection/mylat.total} \n")
 
                 if i%WT==0 and i>equilibriation:
@@ -78,23 +80,28 @@ def run_simulations(coverages:list,epsilon:float, ion_interaction:float)->None:
     
 
 if __name__ == "__main__":
-    coverage = [100 - 4*v for v in range(1,9)]
-    epsilon =[ 1, 2 ] 
+    coverage = [100 - 6*v for v in range(1,17)]
+    epsilon = [0, 1, 1.5]
     import os
     import glob
-
-    for eps in epsilon:
-        nruns = len(glob.glob("Data-*")) 
-        os.mkdir(f"Data-{nruns}")
-        os.chdir(f"Data-{nruns}")
-        run_simulations(coverage, eps, J)
-        with open('parameters.txt','w+') as f:
-            f.write(f"epsilon:{eps} \n")
-            f.write(f"WRITE-PERIODICITY:{WT} \n")
-            f.write(f"NSTEPS:{NSTEPS} \n")
-            f.write(f"EQL:{equilibriation} \n")
-            f.write(f"N:{N}")
-        os.chdir("..")
+    from datetime import date
+    for J in Js:
+        for eps in epsilon:
+            nruns = len(glob.glob("Data-*")) 
+            os.mkdir(f"Data-{nruns}")
+            os.chdir(f"Data-{nruns}")
+            run_simulations(coverage, eps, J)
+            with open('parameters.txt','w+') as f:
+                f.write(f"epsilon:{eps} \n")
+                f.write(f"J:{J} \n")
+                f.write(f"WRITE-PERIODICITY:{WT} \n")
+                f.write(f"NSTEPS:{NSTEPS} \n")
+                f.write(f"EQL:{equilibriation} \n")
+                f.write(f"N:{N}\n")
+                f.write(f'Assignment:{ENASSIGNMENT["way"]}\n')
+                if "sites_per_vacancy" in ENASSIGNMENT:
+                    f.write(f'Sites Per Vacancy :{ENASSIGNMENT["sites_per_vacancy"]}')
+            os.chdir("..")
 
 """
  fhand.write(f"Created:{day} \n")

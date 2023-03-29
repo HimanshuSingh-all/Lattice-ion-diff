@@ -1,68 +1,72 @@
-import glob, os
+import glob, os, sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 from lat2d import newparser
-num = 10#Default Val should be: 24
 
-def returnparams(data:int,dset:int)->dict:
-    params = dict() 
-    with open(f'Set-{dset}/Data-{data}/parameters.txt') as f:
-        for lin in f:
-            line=lin.split(':')
-            params[line[0]] = line[1]
-    return params
-dset = 4# [1,2]#int( input("Number of the simulation set: "))
-star = 12
-data = int( input("Number of the simulation directory: "))
+dire = sys.argv[1]  
+dataset = '/home/himanshu/Proj/src/Datasets'
 
+data = f'{dataset}/{dire}'
 
-#coverage = [5 , 8, 10, 12, 15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40]
-#for dat in data:
+slopes = []
 
-dire = f"Set-{dset}/Data-{data}"
-files = glob.glob(f"{dire}/*.txt")
-msd_traj =[] 
-for fname in files:
-    if fname ==f'{dire}/parameters.txt' or fname ==f'{dire}/newrr.txt':
-        continue
-    fi = fname.split("/")[-1]
-    cov = int(fi.split("-")[0])
-    print(fi, cov)
-    msd_traj.append([ cov, newparser.time_msd( fi, dire)] )     
+for dirs in sorted(glob.glob(f'{data}/Data-*')):
 
-msd_traj.sort(key=lambda x: x[0] )
+    with open(f'{dirs}/parameters.txt') as params:
 
+        for line in params:
 
+            keyvalue = line.split(':')
+            
+            if keyvalue[0] == 'epsilon':
+                epsilon = float(keyvalue[1])
+            
+            if keyvalue[0] == 'WRITE-PERIODICITY':
+                WP = float(keyvalue[1])
+            
+            if keyvalue[0] == 'NSTEPS':
+                NSTEPS = int(keyvalue[1])
+            
+            if keyvalue[0] == 'J':
+                J = float(keyvalue[1].rstrip())
 
-from matplotlib.lines import Line2D
-print(Line2D.markers)
-mark = []
-for marker in Line2D.markers:
-    mark.append(marker)
+            if keyvalue[0] == 'Assignment':
+                Assignment = keyvalue[1].rstrip()
+            
+            if keyvalue[0] == 'Sites Per Vacancy ':
+                sitespvac = int(keyvalue[1].rstrip())
+ 
 
-# Plot Difusivity vs Vacancy
-vac = []
-plt.xlabel(r'$Vacancy(\%)\to$')
-plt.ylabel(r'$Diffusivity\to$')
+    # t = np.arange(WP,NSTEPS//2,WP)
+    files =glob.glob(f'{dirs}/*-NSTEPS{NSTEPS}.txt')
+    diffs = [] # we will fill vacancy, coresponding diffusivity
+    for fil in files:
+        """ Get the vacancy, diffusivity
+        """
+        MSD = newparser.time_msd(fil.split('/')[-1], dirs)
+        with open(fil) as f:
+            print(fil)
+            cov = f.readline()
+            cov = int( cov.split(':')[-1] )
+        diffs.append( [100-cov, stats.linregress( MSD[:,0] , MSD[:,1] ).slope/4.0 ]  )
 
-for elem in msd_traj[::-1]:
-    vac.append([ 100-elem[0],stats.linregress(elem[1][:,0], elem[1][:,1]).slope/4])
+    diffs = np.array(sorted(diffs,key=lambda x:x[0]))
+    with open(f'{dirs}/Diffs-eps{epsilon}','w+') as savefile:
+        np.savetxt(savefile, diffs)
 
-vac = np.array(vac)
-plt.plot(vac[:num,0], vac[:num,1],alpha = 0.7, color='red', marker='o' ,label= r"$E_{min}/k_BT=$"+"{0}".format(returnparams(data,dset)['epsilon']) )
-plt.legend()
-diff = input('Enter diff:')
-plt.savefig(f'diff{diff}.png', dpi= 300, bbox_inches='tight')
-plt.show()
-
-
-# Plot MSD VS TIMESTEPS
-for i,elem in enumerate(msd_traj[-10::2]):
-    plt.plot(elem[1][:,0], elem[1][:,1], label=f'Vacancy:{100-elem[0]}%', marker= mark[i])
-plt.legend()
-plt.show()
-
-
-
-
+    plt.plot(diffs[: ,0] , diffs[:,1], marker ='x',label='E = {0}$k_bT$, J={1}$k_bT$'.format(epsilon,J))
+    plt.xticks(diffs[: ,0])
+    plt.grid()
+    try:
+        plt.title(f'Way of Penalty Assignment: {Assignment}, Sites Per vacancy: {sitespvac}')
+    except:
+        plt.title(f'Diffusivity vs MC step ')
+        
+    plt.legend()
+    plt.ylabel(r'Diffusivity $\to$')
+    plt.xlabel(r'Vacancy(%) $\to$')
+    plt.savefig(f'{dirs}/Diffs-eps{epsilon}.png', dpi = 300, bbox_inches = 'tight')
+    plt.show(block=False)
+    plt.pause(0.5)
+    plt.close()
